@@ -4209,11 +4209,11 @@ function initParams(request, env) {
   defaultHttpsPorts = ["443", "8443", "2053", "2083", "2087", "2096"];
   panelVersion = "2.7.3";
   hostName = request.headers.get("Host");
-  const url = new URL(request.url);
-  const searchParams = new URLSearchParams(url.search);
+  const url2 = new URL(request.url);
+  const searchParams = new URLSearchParams(url2.search);
   client = searchParams.get("app");
-  origin = url.origin;
-  pathName = url.pathname;
+  origin = url2.origin;
+  pathName = url2.pathname;
 }
 __name(initParams, "initParams");
 function initializeParams(request, env) {
@@ -4657,8 +4657,8 @@ async function updateDataset(request, env) {
   }, "validateField");
   const remoteDNS = validateField("remoteDNS") ?? currentSettings?.remoteDNS ?? "https://8.8.8.8/dns-query";
   const enableIPv6 = validateField("enableIPv6") ?? currentSettings?.enableIPv6 ?? true;
-  const url = new URL(remoteDNS);
-  const remoteDNSServer = url.hostname;
+  const url2 = new URL(remoteDNS);
+  const remoteDNSServer = url2.hostname;
   const isServerDomain = isDomain(remoteDNSServer);
   let resolvedRemoteDNS = {};
   if (isServerDomain) {
@@ -4732,15 +4732,15 @@ function extractChainProxyParams(chainProxy) {
   let configParams = {};
   if (!chainProxy)
     return {};
-  const url = new URL(chainProxy);
-  const protocol = url.protocol.slice(0, -1);
+  const url2 = new URL(chainProxy);
+  const protocol = url2.protocol.slice(0, -1);
   if (protocol === "vless") {
-    const params = new URLSearchParams(url.search);
+    const params = new URLSearchParams(url2.search);
     configParams = {
       protocol,
-      uuid: url.username,
-      server: url.hostname,
-      port: url.port
+      uuid: url2.username,
+      server: url2.hostname,
+      port: url2.port
     };
     params.forEach((value, key) => {
       configParams[key] = value;
@@ -4748,10 +4748,10 @@ function extractChainProxyParams(chainProxy) {
   } else {
     configParams = {
       protocol,
-      user: url.username,
-      pass: url.password,
-      server: url.host,
-      port: url.port
+      user: url2.username,
+      pass: url2.password,
+      server: url2.host,
+      port: url2.port
     };
   }
   return JSON.stringify(configParams);
@@ -4850,16 +4850,16 @@ async function renderHomePage(request, env, proxySettings, isPassSet) {
             <span>${app}</span>
         </div>`).join(""), "supportedApps");
   const subQR = /* @__PURE__ */ __name((path, app, tag2, title, sbType) => {
-    const url = `${sbType ? "sing-box://import-remote-profile?url=" : ""}https://${hostName}/${path}/${userID}${app ? `?app=${app}` : ""}#${tag2}`;
+    const url2 = `${sbType ? "sing-box://import-remote-profile?url=" : ""}https://${hostName}/${path}/${userID}${app ? `?app=${app}` : ""}#${tag2}`;
     return `
-            <button onclick="openQR('${url}', '${title}')" style="margin-bottom: 8px;">
+            <button onclick="openQR('${url2}', '${title}')" style="margin-bottom: 8px;">
                 QR Code&nbsp;<span class="material-symbols-outlined">qr_code</span>
             </button>`;
   }, "subQR");
   const subURL = /* @__PURE__ */ __name((path, app, tag2) => {
-    const url = `https://${hostName}/${path}/${userID}${app ? `?app=${app}` : ""}#${tag2}`;
+    const url2 = `https://${hostName}/${path}/${userID}${app ? `?app=${app}` : ""}#${tag2}`;
     return `
-            <button onclick="copyToClipboard('${url}')">
+            <button onclick="copyToClipboard('${url2}')">
                 Copy Sub<span class="material-symbols-outlined">format_list_bulleted</span>
             </button>`;
   }, "subURL");
@@ -6169,14 +6169,6 @@ async function handlePanel(request, env) {
   return await renderHomePage(request, env, proxySettings, isPassSet);
 }
 __name(handlePanel, "handlePanel");
-async function fallback(request) {
-  const url = new URL(request.url);
-  url.hostname = "www.speedtest.net";
-  url.protocol = "https:";
-  request = new Request(url, request);
-  return await fetch(request);
-}
-__name(fallback, "fallback");
 
 // src/protocols/vless.js
 async function vlessOverWSHandler(request, env) {
@@ -7149,8 +7141,8 @@ function buildXrayRoutingRules(proxySettings, outboundAddrs, isChain, isBalancer
       type: "field"
     };
     if (!isWarp) {
-      const url = new URL(remoteDNS);
-      const remoteDNSServer = url.hostname;
+      const url2 = new URL(remoteDNS);
+      const remoteDNSServer = url2.hostname;
       rules.push({
         [isDomain(remoteDNSServer) ? "domain" : "ip"]: [remoteDNSServer],
         network: "tcp",
@@ -8831,14 +8823,14 @@ function buildClashRoutingRules(proxySettings) {
       }
     }
   ];
-  function buildRuleProvider(tag2, format, behavior, url) {
+  function buildRuleProvider(tag2, format, behavior, url2) {
     const fileExtension = format === "text" ? "txt" : format;
     return {
       [tag2]: {
         type: "http",
         format,
         behavior,
-        url,
+        url: url2,
         path: `./ruleset/${tag2}.${fileExtension}`,
         interval: 86400
       }
@@ -9382,7 +9374,44 @@ var worker_default = {
           case "/panel/password":
             return await resetPassword(request, env);
           default:
-            return await fallback(request);
+            let nginxWelcomePage = `<!DOCTYPE html>
+                            <html>
+                            <head>
+                            <title>Welcome to nginx!</title>
+                            <style>
+                            html { color-scheme: light dark; }
+                            body { width: 35em; margin: 0 auto;
+                            font-family: Tahoma, Verdana, Arial, sans-serif; }
+                            </style>
+                            </head>
+                            <body>
+                            <h1>Welcome to nginx!</h1>
+                            <p>If you see this page, the nginx web server is successfully installed and
+                            working. Further configuration is required.</p>
+                            
+                            <p>For online documentation and support please refer to
+                            <a href="http://nginx.org/">nginx.org</a>.<br/>
+                            Commercial support is available at
+                            <a href="http://nginx.com/">nginx.com</a>.</p>
+                            
+                            <p><em>Thank you for using nginx.</em></p>
+                            </body>
+                            </html>`;
+            return new Response(nginxWelcomePage, {
+              status: 200,
+              headers: {
+                "Content-Type": "text/html",
+                "Server": "nginx/1.20.2",
+                "Access-Control-Allow-Origin": url.origin,
+                "Access-Control-Allow-Methods": "GET, POST",
+                "Access-Control-Allow-Headers": "Content-Type, Authorization",
+                "X-Content-Type-Options": "nosniff",
+                "X-Frame-Options": "DENY",
+                "Referrer-Policy": "strict-origin-when-cross-origin",
+                "Cache-Control": "no-store, no-cache, must-revalidate, proxy-revalidate",
+                "CDN-Cache-Control": "no-store"
+              }
+            });
         }
       } else {
         return pathName.startsWith("/tr") ? await trojanOverWSHandler(request, env) : await vlessOverWSHandler(request, env);
